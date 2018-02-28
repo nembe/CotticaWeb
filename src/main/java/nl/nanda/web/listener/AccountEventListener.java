@@ -16,7 +16,7 @@ public class AccountEventListener implements ApplicationListener<AccountEvent> {
     @Override
     public void onApplicationEvent(final AccountEvent accountEvent) {
         System.out.println("AccountEventListener "
-                + accountEvent.getAccount().getEntityId());
+                + accountEvent.getAccount().getAccountUUID());
         transferService.saveAccount(accountEvent.getAccount());
 
     }

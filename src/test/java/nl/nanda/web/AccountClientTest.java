@@ -5,7 +5,6 @@ import java.net.URI;
 
 import nl.nanda.account.Account;
 
-import org.junit.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,9 +31,9 @@ public class AccountClientTest {
         System.out.println("getAccount " + account.getName());
     }
 
-    @Test
+    // @Test
     public void createAccount() {
-        final String url = BASE_URL + "/accounts";
+        final String url = BASE_URL + "/account";
 
         final Account account = new Account(BigDecimal.valueOf(1000.50),
                 BigDecimal.valueOf(20.00), "Eddie");

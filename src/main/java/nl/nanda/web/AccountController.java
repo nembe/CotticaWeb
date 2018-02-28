@@ -2,18 +2,20 @@ package nl.nanda.web;
 
 import java.net.URI;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import javax.validation.ConstraintViolationException;
 
 import nl.nanda.account.Account;
-import nl.nanda.exception.SvaException;
-import nl.nanda.exception.SvaNotFoundException;
+import nl.nanda.exception.AnanieException;
+import nl.nanda.exception.AnanieNotFoundException;
 import nl.nanda.service.TransferService;
 import nl.nanda.web.event.AccountEvent;
 
-import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -33,8 +35,6 @@ import org.springframework.web.util.UriTemplate;
 @Controller
 public class AccountController {
 
-    private final Logger logger = Logger.getLogger(getClass());
-
     @Autowired
     private TransferService transferService;
 
@@ -52,15 +52,17 @@ public class AccountController {
      * Provide a list of all accounts.
      */
     @RequestMapping(value = "/accounts", method = RequestMethod.GET)
-    public @ResponseBody List<Account> accountSummary() {
-        return transferService.findAllAccounts();
+    public @ResponseBody List<String> accountSummary() {
+        return transferService.findAllAccounts().stream().map(Account::getName)
+                .collect(Collectors.toList());
+
     }
 
     /**
      * Provide the details of an account with the given id.
      */
-    @RequestMapping(value = "/accounts/{id}", method = RequestMethod.GET)
-    public @ResponseBody Account accountDetails(@PathVariable final Long id) {
+    @RequestMapping(value = "/account/{id}", method = RequestMethod.GET)
+    public @ResponseBody Account accountDetails(@PathVariable final String id) {
         return transferService.getAccount(id);
     }
 
@@ -68,17 +70,16 @@ public class AccountController {
      * Creates a new Account, setting its URL as the Location header on the
      * response.
      */
-    @RequestMapping(value = "/accounts", method = RequestMethod.POST)
+    @RequestMapping(value = "/account", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.CREATED)
-    // 201
     public HttpEntity<String> createAccount(
             @RequestBody final Account newAccount,
             @Value("#{request.requestURL}") final StringBuffer url) {
 
-        final Long account = newAccount.getEntityId();
+        final UUID accountUUID = UUID.randomUUID();
+        newAccount.setAccountUUID(accountUUID);
         startAccountSavingEvent(newAccount);
-        // final Long account = transferService.saveAccount(newAccount);
-        return entityWithLocation(url, account);
+        return entityWithLocation(url, accountUUID);
     }
 
     private HttpEntity<String> entityWithLocation(final StringBuffer url,
@@ -88,36 +89,36 @@ public class AccountController {
         return new HttpEntity<String>(headers);
     }
 
+    /**
+     * @param newAccount
+     */
     private void startAccountSavingEvent(final Account newAccount) {
         final AccountEvent event = new AccountEvent(this, newAccount);
         eventPublisher.publishEvent(event);
     }
 
     /**
-     * Maps IllegalArgumentExceptions to a 409 Conflict HTTP status code.
+     * Maps AnanieException.
      */
-    @ResponseStatus(HttpStatus.CONFLICT)
-    @ExceptionHandler(SvaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(AnanieException.class)
     public void handleConflict(final Exception ex) {
-        logger.error("Exception is: ", ex);
     }
 
     /**
-     * Maps DataIntegrityViolationException to a 404 Not Found HTTP status code.
+     * Maps ConstraintViolationException to a HTTP status code.
      */
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(ConstraintViolationException.class)
     public void handleViolation(final Exception ex) {
-        logger.error("Exception is: ", ex);
     }
 
     /**
-     * Maps SvaNotFoundException to a 404 Not Found HTTP status code.
+     * Maps AnanieNotFoundException to a 404 Not Found HTTP status code.
      */
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(SvaNotFoundException.class)
+    @ExceptionHandler(AnanieNotFoundException.class)
     public void handleNotFound(final Exception ex) {
-        logger.error("Exception is: ", ex);
     }
 
     /**
