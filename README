@@ -1,0 +1,106 @@
+(Yet Another Rest Client) Chrome Plugin to create Requests and see Response data and Headers
+To create Json payload use https://jsoneditoronline.org
+
+//Sending GET request to retrieve all available accounts.
+http://localhost:8080/accounts
+Response:
+[
+  "Jasper",
+  "Remko"
+]
+
+
+// JSON Payload use (https://jsoneditoronline.org).
+// Creating a account with a POST request using JSON payload.
+http://localhost:8080/account
+Request Payload (JSON):
+{
+  "balance": 75,
+  "overdraft": 10,
+  "name": "djoeka"
+}
+Response Headers (With Url for feedback of the request for the account includes account id)
+{
+  "location": "http://localhost:8080/account/5effd409-7c76-45df-beef-6ff68a30ae28",
+  "date": "Sun, 01 Apr 2018 00:20:11 GMT",
+  "server": "Apache-Coyote/1.1",
+  "content-length": "0",
+  "status": 201
+}
+
+
+
+// GET request to find the details of a account with a unique id.
+http://localhost:8080/account/6ebb8693-7179-4e04-80e1-89323971e98a
+Response:
+{
+  "entityId": 0,
+  "overdraft": 0.5,
+  "balance": 0.25,
+  "name": "Jasper",
+  "amount": 0.75,
+  "accountUUID": "6ebb8693-7179-4e04-80e1-89323971e98a"
+}
+
+// GET request to find the details of a account with the accounts owner name.
+http://localhost:8080/owner/Jasper
+Response:
+{
+  "entityId": 0,
+  "overdraft": 0.5,
+  "balance": 0.25,
+  "name": "Jasper",
+  "amount": 0.75,
+  "accountUUID": "6ebb8693-7179-4e04-80e1-89323971e98a"
+}
+
+
+// GET request to find the details of a successful Transaction by the account requesting for the transfer
+http://localhost:8080/details/6ebb8693-7179-4e04-80e1-89323971e98a
+Response:
+{
+  "entityId": 0,
+  "account": "6ebb8693-7179-4e04-80e1-89323971e98a",
+  "transfer": {
+    "entityId": 0,
+    "credit": "6ebb8693-7179-4e04-80e1-89323971e98a",
+    "debet": "6ebb8693-7189-4e04-80e1-89323971e98a",
+    "state": "CONFIRMED",
+    "day": "2018-01-02",
+    "totaal": 25.1,
+    "zender": null,
+    "ontvanger": null
+  }
+}
+
+// GET request to find the details of a transfer with the transferId.
+http://localhost:8080/transfer/0
+Response:
+{
+  "entityId": 0,
+  "credit": "6ebb8693-7179-4e04-80e1-89323971e98a",
+  "debet": "6ebb8693-7189-4e04-80e1-89323971e98a",
+  "state": "CONFIRMED",
+  "day": "2018-01-02",
+  "totaal": 25.1,
+  "zender": null,
+  "ontvanger": null
+}
+
+// JSON Payload use (https://jsoneditoronline.org).
+// Starting a transfer with a POST request using JSON payload.
+http://localhost:8080/transfer
+Request Payload (JSON):
+{
+  "credit": "6ebb8693-7189-4e04-80e1-89323971e98a",
+  "debet": "6ebb8693-7179-4e04-80e1-89323971e98a",
+  "totaal": 20
+}
+Response Headers (With Url for feedback of the request for the transfer includes the id)
+{
+  "location": "http://localhost:8080/transfer/798720359",
+  "date": "Sun, 01 Apr 2018 00:05:01 GMT",
+  "server": "Apache-Coyote/1.1",
+  "content-length": "0",
+  "status": 200
+}

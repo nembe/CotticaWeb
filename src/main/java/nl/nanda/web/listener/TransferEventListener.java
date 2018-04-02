@@ -7,6 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
+/**
+ * This Transfer Listener service is calling the service to do the work (crud
+ * operatios).
+ *
+ */
 @Component
 public class TransferEventListener implements
         ApplicationListener<TransferEvent> {
@@ -16,7 +21,7 @@ public class TransferEventListener implements
 
     @Override
     public void onApplicationEvent(final TransferEvent transferEvent) {
-        transferService.saveTransfer(transferEvent.getTransfer());
+        transferService.doTransfer(transferEvent.getTransfer());
 
     }
 

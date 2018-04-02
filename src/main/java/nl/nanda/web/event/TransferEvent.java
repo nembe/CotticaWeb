@@ -4,6 +4,11 @@ import nl.nanda.transfer.Transfer;
 
 import org.springframework.context.ApplicationEvent;
 
+/**
+ * Event that holds the Transfer object that we can past to the Transfer
+ * listener.
+ *
+ */
 public class TransferEvent extends ApplicationEvent {
 
     /**

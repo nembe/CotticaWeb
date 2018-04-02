@@ -7,6 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
+/**
+ * This Account Listener service is calling the service to do the work (crud
+ * operatios).
+ *
+ */
 @Component
 public class AccountEventListener implements ApplicationListener<AccountEvent> {
 
@@ -15,8 +20,6 @@ public class AccountEventListener implements ApplicationListener<AccountEvent> {
 
     @Override
     public void onApplicationEvent(final AccountEvent accountEvent) {
-        System.out.println("AccountEventListener "
-                + accountEvent.getAccount().getAccountUUID());
         transferService.saveAccount(accountEvent.getAccount());
 
     }

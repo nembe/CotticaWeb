@@ -11,7 +11,10 @@ import nl.nanda.account.Account;
 import nl.nanda.exception.AnanieException;
 import nl.nanda.exception.AnanieNotFoundException;
 import nl.nanda.service.TransferService;
+import nl.nanda.transaction.Transaction;
+import nl.nanda.transfer.Transfer;
 import nl.nanda.web.event.AccountEvent;
+import nl.nanda.web.event.TransferEvent;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,8 +32,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.util.UriTemplate;
 
+//TODO: List terug geven van transacties horende bij een account verbeteren
+//TODO: Verbeteren transferid return
 /**
- * A controller handling requests for CRUD operations on Accounts.
+ * A controller handling requests for CRUD operations on Accounts in the AAT
+ * application.
  */
 @Controller
 public class AccountController {
@@ -53,9 +59,16 @@ public class AccountController {
      */
     @RequestMapping(value = "/accounts", method = RequestMethod.GET)
     public @ResponseBody List<String> accountSummary() {
-        return transferService.findAllAccounts().stream().map(Account::getName)
-                .collect(Collectors.toList());
+        return transferService.findAllAccounts().stream().map(Account::getName).collect(Collectors.toList());
 
+    }
+
+    /**
+     * Provide a list of all transfers.
+     */
+    @RequestMapping(value = "/transfers", method = RequestMethod.GET)
+    public @ResponseBody List<Transfer> transferSummary() {
+        return transferService.findAllTransfers().stream().collect(Collectors.toList());
     }
 
     /**
@@ -67,14 +80,37 @@ public class AccountController {
     }
 
     /**
+     * Provide the details of an owner of a account by name.
+     */
+    @RequestMapping(value = "/owner/{name}", method = RequestMethod.GET)
+    public @ResponseBody Account accountOwnerDetails(@PathVariable final String name) {
+        return transferService.findAccountByName(name);
+    }
+
+    /**
+     * Find the transaction of an account.
+     */
+    @RequestMapping(value = "/details/{id}", method = RequestMethod.GET)
+    public @ResponseBody List<Transaction> findTransactionByOwnerDetails(@PathVariable final String id) {
+        return transferService.findTransactionByAccount(id);
+    }
+
+    /**
+     * Provide the details of an transfer with the given id.
+     */
+    @RequestMapping(value = "/transfer/{id}", method = RequestMethod.GET)
+    public @ResponseBody Transfer transferDetails(@PathVariable final String id) {
+        return transferService.findTransferById(Integer.valueOf(id));
+    }
+
+    /**
      * Creates a new Account, setting its URL as the Location header on the
-     * response.
+     * response. RequestBody = instantieert Object op basis van instance
+     * variabelen en niet via Constructor.
      */
     @RequestMapping(value = "/account", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.CREATED)
-    public HttpEntity<String> createAccount(
-            @RequestBody final Account newAccount,
-            @Value("#{request.requestURL}") final StringBuffer url) {
+    public HttpEntity<String> createAccount(@RequestBody final Account newAccount, @Value("#{request.requestURL}") final StringBuffer url) {
 
         final UUID accountUUID = UUID.randomUUID();
         newAccount.setAccountUUID(accountUUID);
@@ -82,18 +118,47 @@ public class AccountController {
         return entityWithLocation(url, accountUUID);
     }
 
-    private HttpEntity<String> entityWithLocation(final StringBuffer url,
-            final Object resourceId) {
+    /**
+     * Starts a Transfer, setting its URL as the Location header on the
+     * response.
+     */
+    @RequestMapping(value = "/transfer", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public HttpEntity<String> startTransfer(@RequestBody final Transfer newTransfer, @Value("#{request.requestURL}") final StringBuffer url) {
+
+        startTransferEvent(newTransfer);
+        return entityWithLocation(url, newTransfer.getEntityId());
+    }
+
+    /**
+     * Creating a URL than the clien can lookup the status of the request.
+     * 
+     * @param url
+     * @param resourceId
+     * @return
+     */
+    private HttpEntity<String> entityWithLocation(final StringBuffer url, final Object resourceId) {
         final HttpHeaders headers = new HttpHeaders();
         headers.setLocation(getLocationForChildResource(url, resourceId));
         return new HttpEntity<String>(headers);
     }
 
     /**
+     * Creating an Account in the AAT application.
+     * 
      * @param newAccount
      */
     private void startAccountSavingEvent(final Account newAccount) {
         final AccountEvent event = new AccountEvent(this, newAccount);
+        eventPublisher.publishEvent(event);
+    }
+
+    /**
+     * Starting an Transfer in the AAT application.
+     * 
+     */
+    private void startTransferEvent(final Transfer newTransfer) {
+        final TransferEvent event = new TransferEvent(this, newTransfer);
         eventPublisher.publishEvent(event);
     }
 
@@ -126,10 +191,8 @@ public class AccountController {
      * request, appending the path info with the given childIdentifier using a
      * UriTemplate.
      */
-    private URI getLocationForChildResource(final StringBuffer url,
-            final Object childIdentifier) {
-        final UriTemplate template = new UriTemplate(url.append("/{childId}")
-                .toString());
+    private URI getLocationForChildResource(final StringBuffer url, final Object childIdentifier) {
+        final UriTemplate template = new UriTemplate(url.append("/{childId}").toString());
         return template.expand(childIdentifier);
     }
 

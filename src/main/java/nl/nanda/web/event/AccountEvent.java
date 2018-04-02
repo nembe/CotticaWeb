@@ -4,6 +4,10 @@ import nl.nanda.account.Account;
 
 import org.springframework.context.ApplicationEvent;
 
+/**
+ * Event that holds the Account object that we can past to the Account listener.
+ *
+ */
 public class AccountEvent extends ApplicationEvent {
 
     /**
