@@ -8,8 +8,8 @@ import java.util.stream.Collectors;
 import javax.validation.ConstraintViolationException;
 
 import nl.nanda.account.Account;
+import nl.nanda.domain.CrunchifyRandomNumber;
 import nl.nanda.exception.AnanieException;
-import nl.nanda.exception.AnanieNotFoundException;
 import nl.nanda.service.TransferService;
 import nl.nanda.transaction.Transaction;
 import nl.nanda.transfer.Transfer;
@@ -32,8 +32,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.util.UriTemplate;
 
-//TODO: List terug geven van transacties horende bij een account verbeteren
-//TODO: Verbeteren transferid return
+//TODO: Test when the string is not a UUID (IllegalArgumentException).
 /**
  * A controller handling requests for CRUD operations on Accounts in the AAT
  * application.
@@ -68,7 +67,7 @@ public class AccountController {
      */
     @RequestMapping(value = "/transfers", method = RequestMethod.GET)
     public @ResponseBody List<Transfer> transferSummary() {
-        return transferService.findAllTransfers().stream().collect(Collectors.toList());
+        return transferService.findAllTransfers();
     }
 
     /**
@@ -88,9 +87,9 @@ public class AccountController {
     }
 
     /**
-     * Find the transaction of an account.
+     * Find the transactions of an account with the account UUID..
      */
-    @RequestMapping(value = "/details/{id}", method = RequestMethod.GET)
+    @RequestMapping(value = "/transaction/{id}", method = RequestMethod.GET)
     public @ResponseBody List<Transaction> findTransactionByOwnerDetails(@PathVariable final String id) {
         return transferService.findTransactionByAccount(id);
     }
@@ -126,6 +125,7 @@ public class AccountController {
     @ResponseStatus(HttpStatus.OK)
     public HttpEntity<String> startTransfer(@RequestBody final Transfer newTransfer, @Value("#{request.requestURL}") final StringBuffer url) {
 
+        newTransfer.setEntityId(CrunchifyRandomNumber.generateRandomNumber());
         startTransferEvent(newTransfer);
         return entityWithLocation(url, newTransfer.getEntityId());
     }
@@ -179,11 +179,11 @@ public class AccountController {
     }
 
     /**
-     * Maps AnanieNotFoundException to a 404 Not Found HTTP status code.
+     * Maps IllegalArgumentException when given string is not a UUID.
      */
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(AnanieNotFoundException.class)
-    public void handleNotFound(final Exception ex) {
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(IllegalArgumentException.class)
+    public void handleNotUuidString(final Exception ex) {
     }
 
     /**
