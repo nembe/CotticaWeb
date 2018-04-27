@@ -1,5 +1,9 @@
-(Yet Another Rest Client) Chrome Plugin to create Requests and see Response data and Headers
+(Yet Another Rest Client) Chrome Plugin to create Requests and see Response data and Headers.
 To create Json payload use https://jsoneditoronline.org
+
+//Run the app
+java -jar bank-transactions-0.0.1-SNAPSHOT.jar
+
 
 //Sending GET request to retrieve all available accounts.
 http://localhost:8080/accounts
