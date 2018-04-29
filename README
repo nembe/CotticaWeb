@@ -1,7 +1,19 @@
+TODO: oplossen to many results bij dezelfde gebruiker meerdere malen aangemaakt "NonUniqueResultException"
+To be able to test with Jmeter (Thread-Group-Ananie.jmx) we need 2 Json files (account.json,transfer.json) and 2 csv files (accountNew.csv,test-data.csv).
+Thread-Group-Ananie.jmx = Jmeter Script with Groovy preprocessors for extrating the UUID 
+                           HTTP request Sampler for the different Rest calls (Post/Get)
+						   
+account.json = POST request for creating an account 
+transfer.json = POST request for starting a Transfer
+
+accountNew.csv = Temporary holding UUID between calls/threads
+test-data.csv = The different (Test steps for creating load) REST/HTTP calls (From creating an account untill starting a transfer)
+
 (Yet Another Rest Client) Chrome Plugin to create Requests and see Response data and Headers..
 To create Json payload use https://jsoneditoronline.org
 
 //Run the app
+D:\workspace_ximedes\XimedesWeb\target
 java -jar bank-transactions-0.0.1-SNAPSHOT.jar
 
 
